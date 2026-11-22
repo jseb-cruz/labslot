@@ -388,4 +388,39 @@ public class ReservationTest {
                 mockCreatedAt));
         assertEquals("La reserva no puede durar más de 4 horas", exception.getMessage());
     }
+
+    // Caso límite: 255 caracteres exactos se permiten
+    @Test
+    void ShouldCreateReservationWithPurposeOfExactly255Characters() {
+        String purpose = "a".repeat(255);
+        Reservation reservation = new Reservation(
+                mockId,
+                mockLaboratoryId,
+                mockUserId,
+                mockDate,
+                LocalTime.of(10, 0),
+                LocalTime.of(12, 0),
+                20,
+                purpose,
+                mockState,
+                mockCreatedAt);
+        assertEquals(255, reservation.purpose().length());
+    }
+
+    @Test
+    void ShouldRejectPurposeLongerThan255Characters() {
+        String purpose = "a".repeat(256);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> new Reservation(
+                mockId,
+                mockLaboratoryId,
+                mockUserId,
+                mockDate,
+                LocalTime.of(10, 0),
+                LocalTime.of(12, 0),
+                20,
+                purpose,
+                mockState,
+                mockCreatedAt));
+        assertEquals("El propósito de la reserva no puede tener más de 255 caracteres", exception.getMessage());
+    }
 }

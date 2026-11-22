@@ -46,6 +46,10 @@ public record Reservation(
         if (purpose == null || purpose.isBlank()) {
             throw new IllegalArgumentException("El propósito de la reserva no puede ser nulo o vacío");
         }
+        if (purpose.length() > Constants.MAX_PURPOSE_LENGTH) {
+            throw new IllegalArgumentException("El propósito de la reserva no puede tener más de "
+                    + Constants.MAX_PURPOSE_LENGTH + " caracteres");
+        }
         if (state == null) {
             throw new IllegalArgumentException("El estado de la reserva no puede ser nulo");
         }

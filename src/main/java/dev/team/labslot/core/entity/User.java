@@ -1,5 +1,6 @@
 package dev.team.labslot.core.entity;
 
+import dev.team.labslot.core.constant.Constants;
 import dev.team.labslot.core.constant.UserRole;
 
 import java.util.UUID;
@@ -21,8 +22,16 @@ public record User(
         if (fullName == null || fullName.isBlank()) {
             throw new IllegalArgumentException("El nombre completo del usuario no puede ser nulo o vacío");
         }
+        if (fullName.length() > Constants.MAX_FULL_NAME_LENGTH) {
+            throw new IllegalArgumentException("El nombre completo del usuario no puede tener más de "
+                    + Constants.MAX_FULL_NAME_LENGTH + " caracteres");
+        }
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("El email del usuario no puede ser nulo o vacío");
+        }
+        if (email.length() > Constants.MAX_EMAIL_LENGTH) {
+            throw new IllegalArgumentException("El email del usuario no puede tener más de "
+                    + Constants.MAX_EMAIL_LENGTH + " caracteres");
         }
         if (!email.matches(EMAIL_PATTERN)) {
             throw new IllegalArgumentException("El email del usuario no tiene un formato válido");

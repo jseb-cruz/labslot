@@ -148,4 +148,54 @@ public class UserTest {
                 null));
         assertEquals("El rol del usuario no puede ser nulo", exception.getMessage());
     }
+
+    // Caso límite: 150 caracteres exactos se permiten
+    @Test
+    void ShouldCreateUserWithFullNameOfExactly150Characters() {
+        String fullName = "a".repeat(150);
+        User user = new User(
+                mockId,
+                fullName,
+                "ana.perez@usantoto.edu.co",
+                "password123",
+                mockRole);
+        assertEquals(150, user.fullName().length());
+    }
+
+    @Test
+    void ShouldRejectFullNameLongerThan150Characters() {
+        String fullName = "a".repeat(151);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> new User(
+                mockId,
+                fullName,
+                "ana.perez@usantoto.edu.co",
+                "password123",
+                mockRole));
+        assertEquals("El nombre completo del usuario no puede tener más de 150 caracteres", exception.getMessage());
+    }
+
+    // Caso límite: 150 caracteres exactos se permiten
+    @Test
+    void ShouldCreateUserWithEmailOfExactly150Characters() {
+        String email = "a".repeat(137) + "@usantoto.edu";
+        User user = new User(
+                mockId,
+                "Ana Pérez",
+                email,
+                "password123",
+                mockRole);
+        assertEquals(150, user.email().length());
+    }
+
+    @Test
+    void ShouldRejectEmailLongerThan150Characters() {
+        String email = "a".repeat(138) + "@usantoto.edu";
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> new User(
+                mockId,
+                "Ana Pérez",
+                email,
+                "password123",
+                mockRole));
+        assertEquals("El email del usuario no puede tener más de 150 caracteres", exception.getMessage());
+    }
 }

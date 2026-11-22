@@ -161,4 +161,85 @@ public class LaboratoryTest {
                 null));
         assertEquals("El estado del laboratorio no puede ser nulo", exception.getMessage());
     }
+
+    // Caso límite: 20 caracteres exactos se permiten
+    @Test
+    void ShouldCreateLaboratoryWithCodeOfExactly20Characters() {
+        String code = "a".repeat(20);
+        Laboratory laboratory = new Laboratory(
+                mockId,
+                code,
+                "Laboratorio de Redes",
+                "Edificio Santo Domingo",
+                30,
+                mockState);
+        assertEquals(20, laboratory.code().length());
+    }
+
+    @Test
+    void ShouldRejectCodeLongerThan20Characters() {
+        String code = "a".repeat(21);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> new Laboratory(
+                mockId,
+                code,
+                "Laboratorio de Redes",
+                "Edificio Santo Domingo",
+                30,
+                mockState));
+        assertEquals("El código del laboratorio no puede tener más de 20 caracteres", exception.getMessage());
+    }
+
+    // Caso límite: 150 caracteres exactos se permiten
+    @Test
+    void ShouldCreateLaboratoryWithNameOfExactly150Characters() {
+        String name = "a".repeat(150);
+        Laboratory laboratory = new Laboratory(
+                mockId,
+                "LAB-101",
+                name,
+                "Edificio Santo Domingo",
+                30,
+                mockState);
+        assertEquals(150, laboratory.name().length());
+    }
+
+    @Test
+    void ShouldRejectNameLongerThan150Characters() {
+        String name = "a".repeat(151);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> new Laboratory(
+                mockId,
+                "LAB-101",
+                name,
+                "Edificio Santo Domingo",
+                30,
+                mockState));
+        assertEquals("El nombre del laboratorio no puede tener más de 150 caracteres", exception.getMessage());
+    }
+
+    // Caso límite: 150 caracteres exactos se permiten
+    @Test
+    void ShouldCreateLaboratoryWithBuildingOfExactly150Characters() {
+        String building = "a".repeat(150);
+        Laboratory laboratory = new Laboratory(
+                mockId,
+                "LAB-101",
+                "Laboratorio de Redes",
+                building,
+                30,
+                mockState);
+        assertEquals(150, laboratory.building().length());
+    }
+
+    @Test
+    void ShouldRejectBuildingLongerThan150Characters() {
+        String building = "a".repeat(151);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> new Laboratory(
+                mockId,
+                "LAB-101",
+                "Laboratorio de Redes",
+                building,
+                30,
+                mockState));
+        assertEquals("El edificio del laboratorio no puede tener más de 150 caracteres", exception.getMessage());
+    }
 }
