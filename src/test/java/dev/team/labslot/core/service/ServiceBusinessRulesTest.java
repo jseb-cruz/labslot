@@ -1,6 +1,6 @@
 package dev.team.labslot.core.service;
 
-import dev.team.labslot.adapter.config.InMemoryConfig;
+import dev.team.labslot.adapter.repository.inmemory.InMemoryConfig;
 import dev.team.labslot.core.constant.*;
 import dev.team.labslot.core.dto.*;
 import dev.team.labslot.core.entity.*;

@@ -1,8 +1,5 @@
-package dev.team.labslot.adapter.config;
+package dev.team.labslot.adapter.repository.inmemory;
 
-import dev.team.labslot.adapter.repository.inmemory.InMemoryLaboratoryRepository;
-import dev.team.labslot.adapter.repository.inmemory.InMemoryReservationRepository;
-import dev.team.labslot.adapter.repository.inmemory.InMemoryUserRepository;
 import dev.team.labslot.adapter.report.OpenPdfReportGateway;
 import dev.team.labslot.core.constant.LaboratoryState;
 import dev.team.labslot.core.constant.ReservationState;
@@ -22,6 +19,7 @@ import dev.team.labslot.core.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -32,11 +30,12 @@ import java.time.ZoneId;
 
 /**
  * Configuración con repositorios en memoria. Crea los repositorios, el reloj, los servicios
- * y carga datos de ejemplo al arrancar la aplicación.
+ * y carga datos de ejemplo al arrancar la aplicación. Se activa con labslot.repository=inmemory.
  * Los tests la usan con new InMemoryConfig(), sin levantar Spring: como nunca llaman a sampleData,
  * trabajan con repositorios vacíos.
  */
 @Configuration
+@ConditionalOnProperty(name = "labslot.repository", havingValue = "inmemory")
 public class InMemoryConfig {
 
     private static final Logger log = LoggerFactory.getLogger(InMemoryConfig.class);
@@ -90,7 +89,7 @@ public class InMemoryConfig {
     }
 
     /**
-     * Datos de ejemplo de la USTA Tunja (los mismos de data.sql del paso 4). Spring ejecuta este
+     * Datos de ejemplo de la USTA Tunja (los mismos de data.sql, que usa el modo mariadb). Spring ejecuta este
      * CommandLineRunner una vez al terminar de arrancar.
      * Se usan los create de los repositorios y no los de los servicios, porque el servicio rechaza
      * fechas pasadas y deja toda reserva nueva en PENDING; así se pueden cargar reservas en cualquier estado.

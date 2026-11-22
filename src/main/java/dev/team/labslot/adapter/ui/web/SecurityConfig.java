@@ -1,4 +1,4 @@
-package dev.team.labslot.adapter.web;
+package dev.team.labslot.adapter.ui.web;
 
 import dev.team.labslot.core.service.UserService;
 import org.springframework.context.annotation.Bean;

@@ -1,4 +1,4 @@
-package dev.team.labslot.adapter.web;
+package dev.team.labslot.adapter.ui.web;
 
 import dev.team.labslot.core.constant.UserRole;
 import dev.team.labslot.core.entity.User;

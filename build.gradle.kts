@@ -22,6 +22,12 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-jdbc")
+
+    // database (la versión del driver de MariaDB la gestiona Spring Boot)
+    implementation("org.jdbi:jdbi3-core:3.55.0")
+    implementation("org.jdbi:jdbi3-sqlobject:3.55.0")
+    runtimeOnly("org.mariadb.jdbc:mariadb-java-client")
 
     // reportes PDF (2.0.5 es la última versión de OpenPDF compatible con Java 17; desde la 2.1.0 exige Java 21)
     implementation("com.github.librepdf:openpdf:2.0.5")
