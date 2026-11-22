@@ -1,7 +1,9 @@
 package dev.team.labslot.adapter.repository.mariadb;
 
 import dev.team.labslot.adapter.report.OpenPdfReportGateway;
+import dev.team.labslot.adapter.security.BCryptPasswordHasher;
 import dev.team.labslot.core.port.LaboratoryRepository;
+import dev.team.labslot.core.port.PasswordHasher;
 import dev.team.labslot.core.port.ReportGateway;
 import dev.team.labslot.core.port.ReservationRepository;
 import dev.team.labslot.core.port.UserRepository;
@@ -61,10 +63,17 @@ public class MariaDbConfig {
         return new LaboratoryService(laboratoryRepository, reservationRepository);
     }
 
+    // Cifrado de contraseñas con BCrypt
+    @Bean
+    public PasswordHasher passwordHasher() {
+        return new BCryptPasswordHasher();
+    }
+
     @Bean
     public UserService userService(UserRepository userRepository,
-                                   ReservationRepository reservationRepository) {
-        return new UserService(userRepository, reservationRepository);
+                                   ReservationRepository reservationRepository,
+                                   PasswordHasher passwordHasher) {
+        return new UserService(userRepository, reservationRepository, passwordHasher);
     }
 
     // Reportes PDF con OpenPDF

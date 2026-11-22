@@ -51,7 +51,9 @@ class ServiceBusinessRulesTest {
         userRepository = config.userRepository();
 
         laboratoryService = config.laboratoryService(laboratoryRepository, reservationRepository);
-        userService = config.userService(userRepository, reservationRepository);
+        // Cifrado falso (sin Mockito: una lambda) para comprobar qué contraseña se guarda sin depender de BCrypt
+        PasswordHasher fakePasswordHasher = rawPassword -> "hash:" + rawPassword;
+        userService = config.userService(userRepository, reservationRepository, fakePasswordHasher);
         // Se pasa un reloj fijo en vez de config.clock() para que el test no dependa de la hora real,
         // y un gateway falso en vez del PDF real para revisar qué datos le llegan al reporte
         ReportGateway fakeReportGateway = (startDate, endDate, reservations, laboratories, users, generatedAt) -> {
@@ -181,16 +183,117 @@ class ServiceBusinessRulesTest {
         reservationService.create(laboratory.laboratoryId(), owner.userId(), requestTomorrow(10, 12));
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> userService.delete(owner.userId()));
+                () -> userService.delete(owner.userId(), admin.userId()));
 
         assertEquals("No se puede eliminar un usuario con reservas", exception.getMessage());
     }
 
     @Test
     void shouldDeleteUserWithoutReservations() {
-        userService.delete(otherUser.userId());
+        userService.delete(otherUser.userId(), admin.userId());
 
         assertTrue(userService.findById(otherUser.userId()).isEmpty());
+    }
+
+    // Solicitud de usuario nuevo con la contraseña indicada
+    private UserDTO userWithPassword(String password) {
+        return new UserDTO("Carla Ruiz", "carla@usantoto.edu.co", password, UserRole.ROLE_USER);
+    }
+
+    @Test
+    void shouldSaveHashedPasswordWhenCreatingUser() {
+        User created = userService.create(userWithPassword("clave123"));
+
+        assertEquals("hash:clave123", created.password());
+        assertEquals("hash:clave123", userRepository.findById(created.userId()).orElseThrow().password());
+    }
+
+    @Test
+    void shouldSaveHashedPasswordWhenUpdatingUser() {
+        UserDTO dto = new UserDTO("Luis Gómez", "luis@usantoto.edu.co", "clave123", UserRole.ROLE_USER);
+
+        User updated = userService.update(otherUser.userId(), dto).orElseThrow();
+
+        assertEquals("hash:clave123", updated.password());
+    }
+
+    @Test
+    void shouldRejectNullPassword() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userService.create(userWithPassword(null)));
+
+        assertEquals("La contraseña del usuario no puede ser nula o vacía", exception.getMessage());
+    }
+
+    @Test
+    void shouldRejectBlankPassword() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userService.create(userWithPassword(" ".repeat(8))));
+
+        assertEquals("La contraseña del usuario no puede ser nula o vacía", exception.getMessage());
+    }
+
+    @Test
+    void shouldRejectPasswordShorterThanEightCharacters() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userService.create(userWithPassword("1234567")));
+
+        assertEquals("La contraseña del usuario debe tener al menos 8 caracteres", exception.getMessage());
+    }
+
+    @Test
+    void shouldAcceptPasswordWithExactlyEightCharacters() {
+        User created = userService.create(userWithPassword("12345678"));
+
+        assertEquals("hash:12345678", created.password());
+    }
+
+    @Test
+    void shouldAcceptPasswordWithExactlySeventyTwoBytes() {
+        User created = userService.create(userWithPassword("a".repeat(72)));
+
+        assertEquals("hash:" + "a".repeat(72), created.password());
+    }
+
+    @Test
+    void shouldRejectPasswordLongerThanSeventyTwoBytes() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userService.create(userWithPassword("a".repeat(73))));
+
+        assertEquals("La contraseña del usuario es demasiado larga (máximo 72 caracteres; las tildes y la ñ cuentan doble)", exception.getMessage());
+    }
+
+    // 37 eñes son 37 caracteres pero 74 bytes
+    @Test
+    void shouldRejectPasswordLongerThanSeventyTwoBytesWithAccents() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userService.create(userWithPassword("ñ".repeat(37))));
+
+        assertEquals("La contraseña del usuario es demasiado larga (máximo 72 caracteres; las tildes y la ñ cuentan doble)", exception.getMessage());
+    }
+
+    @Test
+    void shouldRejectShortPasswordWhenUpdatingUser() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userService.update(otherUser.userId(), new UserDTO("Luis Gómez", "luis@usantoto.edu.co", "1234567", UserRole.ROLE_USER)));
+
+        assertEquals("La contraseña del usuario debe tener al menos 8 caracteres", exception.getMessage());
+    }
+
+    @Test
+    void shouldRejectDeletingOwnUser() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userService.delete(admin.userId(), admin.userId()));
+
+        assertEquals("No puedes eliminar tu propio usuario", exception.getMessage());
+    }
+
+    @Test
+    void shouldRejectDeleteUserWithoutRequester() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                () -> userService.delete(otherUser.userId(), null));
+
+        assertEquals("El id del usuario que solicita la eliminación no puede ser nulo", exception.getMessage());
     }
 
     // ---------- Reservas: existencia y datos ----------

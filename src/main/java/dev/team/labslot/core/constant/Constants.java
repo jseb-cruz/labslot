@@ -15,4 +15,7 @@ public class Constants {
     public static final int MAX_PURPOSE_LENGTH = 255;
     public static final int MAX_FULL_NAME_LENGTH = 150;
     public static final int MAX_EMAIL_LENGTH = 150;
+    // Longitud de la contraseña. El máximo va en bytes porque es el límite de BCrypt (una tilde o una ñ ocupan 2)
+    public static final int MIN_PASSWORD_LENGTH = 8;
+    public static final int MAX_PASSWORD_BYTES = 72;
 }

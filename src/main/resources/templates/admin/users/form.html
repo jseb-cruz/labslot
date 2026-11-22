@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Nuevo usuario')}"></head>
+<body class="bg-light d-flex flex-column min-vh-100">
+<nav th:replace="~{layout :: navbar}"></nav>
+
+<main class="container flex-grow-1">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <h1 class="h3 mb-3">Nuevo usuario</h1>
+
+            <div th:replace="~{layout :: alerts}"></div>
+
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <!-- Si hay un error se vuelve a llenar lo que se escribió, menos las contraseñas -->
+                    <form th:action="@{/admin/users}" method="post">
+                        <div class="mb-3">
+                            <label for="fullName" class="form-label">Nombre completo</label>
+                            <input type="text" class="form-control" id="fullName" name="fullName" maxlength="150" required
+                                   th:value="${user?.fullName()}">
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-md-8">
+                                <label for="email" class="form-label">Correo</label>
+                                <input type="email" class="form-control" id="email" name="email" maxlength="150" required
+                                       autocomplete="off" th:value="${user?.email()}" placeholder="Ej.: nombre.apellido@usantoto.edu.co">
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label for="role" class="form-label">Rol</label>
+                                <select class="form-select" id="role" name="role" required>
+                                    <option value="ROLE_USER"
+                                            th:selected="${user?.role()?.name() == 'ROLE_USER'}">Usuario</option>
+                                    <option value="ROLE_ADMIN"
+                                            th:selected="${user?.role()?.name() == 'ROLE_ADMIN'}">Administrador</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-12 col-md-6">
+                                <label for="password" class="form-label">Contraseña</label>
+                                <input type="password" class="form-control" id="password" name="password"
+                                       minlength="8" maxlength="72" autocomplete="new-password" required>
+                                <div class="form-text">Mínimo 8 caracteres.</div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="passwordConfirmation" class="form-label">Confirmar contraseña</label>
+                                <input type="password" class="form-control" id="passwordConfirmation" name="passwordConfirmation"
+                                       minlength="8" maxlength="72" autocomplete="new-password" required>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Guardar usuario</button>
+                            <a th:href="@{/admin/users}" class="btn btn-outline-secondary">Volver</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+<script th:replace="~{layout :: scripts}"></script>
+</body>
+</html>

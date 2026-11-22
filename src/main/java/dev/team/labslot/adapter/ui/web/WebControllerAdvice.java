@@ -3,8 +3,12 @@ package dev.team.labslot.adapter.ui.web;
 import dev.team.labslot.core.constant.UserRole;
 import dev.team.labslot.core.entity.User;
 import dev.team.labslot.core.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -28,12 +32,21 @@ public class WebControllerAdvice {
 
     // Usuario con sesión iniciada, disponible en todas las vistas como ${currentUser}
     // (la barra de navegación muestra su nombre y su rol). Es null en el login.
+    // Si un administrador eliminó al usuario mientras tenía la sesión abierta, lo atiende handleDeletedUser
     @ModelAttribute("currentUser")
     public User currentUser(Principal principal) {
         if (principal == null) {
             return null;
         }
-        return userService.findByEmail(principal.getName()).orElse(null);
+        return userService.findByEmail(principal.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("El usuario de la sesión ya no existe"));
+    }
+
+    // El usuario de la sesión ya no existe: se cierra la sesión y se vuelve al login, que muestra el mensaje
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public String handleDeletedUser(HttpServletRequest request, HttpServletResponse response) {
+        new SecurityContextLogoutHandler().logout(request, response, null);
+        return "redirect:/login?deleted";
     }
 
     // Un parámetro de la URL con formato inválido (un estado o un id que no existen) es un error del cliente: 400.

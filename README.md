@@ -43,6 +43,7 @@ Proyecto integrador de **Desarrollo Orientado a Servicios 2026-2**, Universidad 
 - Solicitud de reservas por franja horaria, sin cruces de horario.
 - Aprobación, rechazo, cancelación y finalización de reservas.
 - Gestión de laboratorios: listar, crear y alternar entre activo y mantenimiento.
+- Gestión de usuarios para el administrador: listar, crear y eliminar.
 - Inicio de sesión con dos roles: administrador y usuario.
 - Páginas de error propias (403, 404 y 500).
 - API REST en JSON con los mismos usuarios y las mismas reglas de la web.
@@ -75,10 +76,12 @@ labslot/
 │   │   │   │   ├── constant/      Constants, LaboratoryState, ReservationState, UserRole
 │   │   │   │   ├── dto/           LaboratoryDTO, ReservationDTO, UserDTO
 │   │   │   │   ├── entity/        Laboratory, Reservation, User
-│   │   │   │   ├── port/          LaboratoryRepository, ReservationRepository, UserRepository, ReportGateway
+│   │   │   │   ├── port/          LaboratoryRepository, ReservationRepository, UserRepository,
+│   │   │   │   │                  ReportGateway, PasswordHasher
 │   │   │   │   └── service/       LaboratoryService, ReservationService, UserService
 │   │   │   └── adapter/
 │   │   │       ├── report/        OpenPdfReportGateway
+│   │   │       ├── security/      BCryptPasswordHasher
 │   │   │       ├── repository/
 │   │   │       │   ├── inmemory/  InMemoryConfig, InMemoryLaboratoryRepository,
 │   │   │       │   │              InMemoryReservationRepository, InMemoryUserRepository
@@ -89,7 +92,8 @@ labslot/
 │   │   │       └── ui/
 │   │   │           ├── api/       JavalinServer, LaboratoryRestController, ReservationRestController
 │   │   │           └── web/       HomeController, ReservationController, AdminReservationController,
-│   │   │                          LaboratoryController, SecurityConfig, WebControllerAdvice
+│   │   │                          LaboratoryController, UserController, SecurityConfig,
+│   │   │                          WebControllerAdvice
 │   │   └── resources/
 │   │       ├── application.properties
 │   │       ├── schema.sql
@@ -115,10 +119,10 @@ labslot/
 |---|---|---|
 | Dominio | `core/entity`, `core/constant` | Entidades que validan sus datos al construirse, estados, roles y límites |
 | Datos de entrada | `core/dto` | Datos para crear o actualizar, sin ids |
-| Puertos | `core/port` | Interfaces de lo que el dominio necesita del exterior: guardar datos y generar reportes |
+| Puertos | `core/port` | Interfaces de lo que el dominio necesita del exterior: guardar datos, generar reportes y cifrar contraseñas |
 | Servicios | `core/service` | Casos de uso y reglas de negocio |
 | Adaptadores de entrada | `adapter/ui/web`, `adapter/ui/api` | Reciben las peticiones de la web y de la API, y llaman a los servicios |
-| Adaptadores de salida | `adapter/repository/*`, `adapter/report` | Implementan los puertos: memoria, MariaDB y PDF |
+| Adaptadores de salida | `adapter/repository/*`, `adapter/report`, `adapter/security` | Implementan los puertos: memoria, MariaDB, PDF y BCrypt |
 | Configuración | `InMemoryConfig`, `MariaDbConfig` | Crean los repositorios y los servicios; `labslot.repository` elige cuál se usa |
 
 ### Regla de dependencias
@@ -141,14 +145,17 @@ flowchart LR
         services["service<br/>LaboratoryService<br/>ReservationService<br/>UserService"]
         repoPorts["port<br/>LaboratoryRepository<br/>ReservationRepository<br/>UserRepository"]
         reportPort["port<br/>ReportGateway"]
+        hasherPort["port<br/>PasswordHasher"]
         services --> repoPorts
         services --> reportPort
+        services --> hasherPort
     end
 
     subgraph salida["Adaptadores de salida"]
         memory["repository/inmemory"]
         mariadb["repository/mariadb<br/>JDBI"]
         pdf["report<br/>OpenPDF"]
+        bcrypt["security<br/>BCrypt"]
     end
 
     web --> services
@@ -156,6 +163,7 @@ flowchart LR
     memory -.->|implementa| repoPorts
     mariadb -.->|implementa| repoPorts
     pdf -.->|implementa| reportPort
+    bcrypt -.->|implementa| hasherPort
     mariadb --> db[(MariaDB)]
 ```
 
@@ -186,7 +194,16 @@ flowchart LR
 - Toda reserva nueva queda pendiente.
 - Un usuario solo cancela sus propias reservas; el administrador cancela cualquiera.
 
-Además, el código de un laboratorio y el correo de un usuario son únicos, sin distinguir mayúsculas.
+Además, el código de un laboratorio es único, sin distinguir mayúsculas.
+
+### Reglas de los usuarios
+
+- El correo es único, sin distinguir mayúsculas, y debe tener un formato válido.
+- El nombre y el correo tienen máximo 150 caracteres.
+- La contraseña tiene mínimo 8 caracteres y máximo 72 (las tildes y la ñ cuentan doble, por el límite de BCrypt).
+- La contraseña se guarda como hash BCrypt, nunca en texto plano.
+- No se puede eliminar un usuario con reservas, en cualquier estado.
+- Un administrador no puede eliminar su propio usuario, así siempre queda al menos uno.
 
 ### Cambios de estado
 
@@ -348,6 +365,10 @@ Los dos comandos piden la contraseña del usuario `labslot`.
 
 Son datos de ejemplo. Las contraseñas no se guardan en texto plano, sino como hashes BCrypt.
 
+El administrador puede crear más usuarios y eliminar los que no tengan reservas desde la web, en **Usuarios** (<http://localhost:8080/admin/users>). La lista muestra nombre, correo y rol, nunca la contraseña. Si se elimina a un usuario con la sesión abierta, su siguiente petición lo lleva al inicio de sesión.
+
+En modo `mariadb`, un usuario de ejemplo eliminado **vuelve a aparecer** al reiniciar, con la contraseña de la tabla, porque `data.sql` lo inserta de nuevo.
+
 | Acción | Usuario | Administrador |
 |---|---|---|
 | Ver reservas | Web y API, solo las suyas | Web y API, todas, con filtro por estado |
@@ -357,6 +378,7 @@ Son datos de ejemplo. Las contraseñas no se guardan en texto plano, sino como h
 | Aprobar, rechazar y completar | No | Web y API |
 | Consultar laboratorios | API; en la web, los activos al crear una reserva | Web y API |
 | Crear laboratorios y cambiar su estado | No | Web y API |
+| Ver, crear y eliminar usuarios | No | Web |
 | Descargar el reporte PDF | No | Web |
 
 ## API REST
@@ -501,16 +523,16 @@ Si no hay reservas en el rango, el reporte lo indica. Si las fechas faltan o est
 ./gradlew test
 ```
 
-Son **105 tests** con JUnit 5, que no necesitan MariaDB:
+Son **117 tests** con JUnit 5, que no necesitan MariaDB:
 
 | Clase | Tests | Qué cubre |
 |---|---|---|
 | `LaboratoryTest` | 18 | Datos obligatorios, capacidad y longitudes |
 | `ReservationTest` | 24 | Datos obligatorios, horario 06:00–22:00, máximo 4 horas y longitud del propósito, con sus casos límite |
 | `UserTest` | 16 | Datos obligatorios, formato del correo y longitudes |
-| `ServiceBusinessRulesTest` | 47 | Reglas de los servicios: unicidad, cruces, capacidad, fechas, cambios de estado, permisos para cancelar y reporte, con los repositorios en memoria |
+| `ServiceBusinessRulesTest` | 59 | Reglas de los servicios: unicidad, cruces, capacidad, fechas, cambios de estado, permisos para cancelar, contraseñas, eliminación de usuarios y reporte, con los repositorios en memoria |
 
-La web, la API, los repositorios de MariaDB y el diseño del PDF no tienen tests automáticos.
+La web, la API, los repositorios de MariaDB, el cifrado con BCrypt y el diseño del PDF no tienen tests automáticos.
 
 ## Comandos útiles
 
