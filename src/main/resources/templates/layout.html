@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<!-- Fragmentos comunes de todas las páginas. Se usan con th:replace="~{layout :: nombre}" -->
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<!-- Encabezado: título de la pestaña y Bootstrap guardado localmente en static/ -->
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' · LabSlot'">LabSlot</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+</head>
+
+<body>
+
+<!-- Barra de navegación: enlaces según el rol, nombre del usuario y botón para cerrar sesión -->
+<nav th:fragment="navbar" class="navbar navbar-expand-md navbar-dark bg-primary mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-semibold" th:href="@{/}">LabSlot</a>
+        <th:block th:if="${currentUser != null}">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                    aria-controls="mainNav" aria-expanded="false" aria-label="Mostrar menú">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-auto">
+                    <th:block th:if="${currentUser.role().name() == 'ROLE_ADMIN'}">
+                        <li class="nav-item"><a class="nav-link" th:href="@{/admin/reservations}">Reservas</a></li>
+                        <li class="nav-item"><a class="nav-link" th:href="@{/admin/laboratories}">Laboratorios</a></li>
+                    </th:block>
+                    <th:block th:if="${currentUser.role().name() == 'ROLE_USER'}">
+                        <li class="nav-item"><a class="nav-link" th:href="@{/reservations}">Mis reservas</a></li>
+                        <li class="nav-item"><a class="nav-link" th:href="@{/reservations/new}">Nueva reserva</a></li>
+                    </th:block>
+                </ul>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <span class="navbar-text text-white">
+                        <span th:text="${currentUser.fullName()}">Nombre del usuario</span>
+                        <span class="badge text-bg-light ms-1"
+                              th:text="${currentUser.role().name() == 'ROLE_ADMIN'} ? 'Administrador' : 'Usuario'">Rol</span>
+                    </span>
+                    <form th:action="@{/logout}" method="post" class="m-0">
+                        <button type="submit" class="btn btn-outline-light btn-sm">Cerrar sesión</button>
+                    </form>
+                </div>
+            </div>
+        </th:block>
+    </div>
+</nav>
+
+<!-- Alertas de éxito y de error (mensajes de los servicios) -->
+<div th:fragment="alerts">
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${successMessage}">Operación exitosa</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${errorMessage}">Mensaje de error</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+</div>
+
+<!-- Estado de una reserva en español y con color -->
+<span th:fragment="stateBadge(state)" th:switch="${state.name()}">
+    <span th:case="'RSTATE_PENDING'" class="badge text-bg-warning">Pendiente</span>
+    <span th:case="'RSTATE_APPROVED'" class="badge text-bg-success">Aprobada</span>
+    <span th:case="'RSTATE_REJECTED'" class="badge text-bg-danger">Rechazada</span>
+    <span th:case="'RSTATE_CANCELLED'" class="badge text-bg-secondary">Cancelada</span>
+    <span th:case="'RSTATE_COMPLETED'" class="badge text-bg-primary">Completada</span>
+</span>
+
+<!-- Estado de un laboratorio en español y con color -->
+<span th:fragment="labStateBadge(state)" th:switch="${state.name()}">
+    <span th:case="'LSTATE_ACTIVE'" class="badge text-bg-success">Activo</span>
+    <span th:case="'LSTATE_MAINTENANCE'" class="badge text-bg-warning">En mantenimiento</span>
+</span>
+
+<!-- Contenido de las páginas de error: código, título, mensaje y botón para volver al inicio -->
+<div th:fragment="errorContent(code, title, message)" class="text-center py-5">
+    <p class="display-1 fw-bold text-primary mb-2" th:text="${code}">404</p>
+    <h1 class="h3 mb-3" th:text="${title}">Título</h1>
+    <p class="text-muted mb-4" th:text="${message}">Mensaje</p>
+    <a th:href="@{/}" class="btn btn-primary">Volver al inicio</a>
+</div>
+
+<!-- Pie de página -->
+<footer th:fragment="footer" class="border-top mt-5 py-3 text-center text-muted small">
+    LabSlot · Reserva de laboratorios · Universidad Santo Tomás, Seccional Tunja ·
+    Desarrollo Orientado a Servicios 2026-2
+</footer>
+
+<!-- JavaScript de Bootstrap (menú desplegable y botón para cerrar alertas) -->
+<script th:fragment="scripts" th:src="@{/js/bootstrap.bundle.min.js}"></script>
+
+</body>
+</html>

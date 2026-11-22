@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<!-- Página de error genérica para los códigos que no tienen página propia (400, 405...). Spring Boot pasa ${status}. -->
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Error')}"></head>
+<body class="bg-light d-flex flex-column min-vh-100">
+<nav th:replace="~{layout :: navbar}"></nav>
+
+<main class="container flex-grow-1">
+    <div th:replace="~{layout :: errorContent(${status}, 'No pudimos procesar la solicitud', 'Revisa la dirección o los datos enviados e intenta de nuevo.')}"></div>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+<script th:replace="~{layout :: scripts}"></script>
+</body>
+</html>

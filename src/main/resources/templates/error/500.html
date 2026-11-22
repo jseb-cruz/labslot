@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Error del servidor')}"></head>
+<body class="bg-light d-flex flex-column min-vh-100">
+<nav th:replace="~{layout :: navbar}"></nav>
+
+<main class="container flex-grow-1">
+    <div th:replace="~{layout :: errorContent('500', 'Algo salió mal', 'Ocurrió un error inesperado en el servidor. Intenta de nuevo en unos minutos.')}"></div>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+<script th:replace="~{layout :: scripts}"></script>
+</body>
+</html>

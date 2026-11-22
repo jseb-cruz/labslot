@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Iniciar sesión')}"></head>
+<body class="bg-light d-flex flex-column min-vh-100">
+<nav th:replace="~{layout :: navbar}"></nav>
+
+<main class="container flex-grow-1">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-7 col-lg-5">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h1 class="h4 mb-1">Iniciar sesión</h1>
+                    <p class="text-muted mb-4">Reserva de laboratorios de la USTA Tunja</p>
+
+                    <!-- Spring Security redirige a /login?error o /login?logout -->
+                    <div th:if="${param.error}" class="alert alert-danger" role="alert">
+                        Correo o contraseña incorrectos
+                    </div>
+                    <div th:if="${param.logout}" class="alert alert-success" role="alert">
+                        Sesión cerrada
+                    </div>
+
+                    <!-- th:action agrega el token CSRF que exige Spring Security -->
+                    <form th:action="@{/login}" method="post">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Correo</label>
+                            <input type="email" class="form-control" id="email" name="email"
+                                   autocomplete="username" required autofocus>
+                        </div>
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Contraseña</label>
+                            <input type="password" class="form-control" id="password" name="password"
+                                   autocomplete="current-password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Solo para la sustentación: usuarios de los datos de ejemplo de InMemoryConfig -->
+            <div class="card border-warning">
+                <div class="card-header bg-warning-subtle">
+                    <strong>Usuarios de prueba</strong>
+                    <span class="d-block small">Solo para pruebas: no usar en producción</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0 small">
+                        <thead>
+                        <tr>
+                            <th>Correo</th>
+                            <th>Contraseña</th>
+                            <th>Rol</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>martha.vargas@usantoto.edu.co</td>
+                            <td><code>Admin2026*</code></td>
+                            <td>Administrador</td>
+                        </tr>
+                        <tr>
+                            <td>jorge.castro@usantoto.edu.co</td>
+                            <td><code>Usta2026*</code></td>
+                            <td>Usuario</td>
+                        </tr>
+                        <tr>
+                            <td>valentina.suarez@usantoto.edu.co</td>
+                            <td><code>Usta2026*</code></td>
+                            <td>Usuario</td>
+                        </tr>
+                        <tr>
+                            <td>daniel.rincon@usantoto.edu.co</td>
+                            <td><code>Usta2026*</code></td>
+                            <td>Usuario</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+<script th:replace="~{layout :: scripts}"></script>
+</body>
+</html>

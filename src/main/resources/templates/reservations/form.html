@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Nueva reserva')}"></head>
+<body class="bg-light d-flex flex-column min-vh-100">
+<nav th:replace="~{layout :: navbar}"></nav>
+
+<main class="container flex-grow-1">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <h1 class="h3 mb-3">Nueva reserva</h1>
+
+            <div th:replace="~{layout :: alerts}"></div>
+
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <!-- Los valores se vuelven a llenar con lo que el usuario escribió si hay un error -->
+                    <form th:action="@{/reservations}" method="post">
+                        <div class="mb-3">
+                            <label for="laboratoryId" class="form-label">Laboratorio</label>
+                            <select class="form-select" id="laboratoryId" name="laboratoryId" required>
+                                <option value="">Selecciona un laboratorio</option>
+                                <option th:each="laboratory : ${activeLaboratories}"
+                                        th:value="${laboratory.laboratoryId()}"
+                                        th:selected="${laboratory.laboratoryId() == selectedLaboratoryId}"
+                                        th:text="${laboratory.code()} + ' – ' + ${laboratory.name()} + ' (' + ${laboratory.capacity()} + ' personas)'">
+                                    LAB-SIS-01 – Laboratorio de Sistemas 1 (30 personas)
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-md-4">
+                                <label for="date" class="form-label">Fecha</label>
+                                <input type="date" class="form-control" id="date" name="date" required
+                                       th:min="${today}" th:value="${reservation?.date()}">
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label for="startTime" class="form-label">Hora de inicio</label>
+                                <input type="time" class="form-control" id="startTime" name="startTime" required
+                                       th:min="${openingTime}" th:max="${closingTime}" th:value="${reservation?.startTime()}">
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label for="endTime" class="form-label">Hora de fin</label>
+                                <input type="time" class="form-control" id="endTime" name="endTime" required
+                                       th:min="${openingTime}" th:max="${closingTime}" th:value="${reservation?.endTime()}">
+                            </div>
+                        </div>
+                        <p class="form-text mt-n2 mb-3"
+                           th:text="'Horario permitido: ' + ${openingTime} + ' a ' + ${closingTime} + ', máximo ' + ${maxHours} + ' horas.'">
+                            Horario permitido: 06:00 a 22:00, máximo 4 horas.
+                        </p>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-12 col-md-4">
+                                <label for="attendees" class="form-label">Asistentes</label>
+                                <input type="number" class="form-control" id="attendees" name="attendees" min="1" required
+                                       th:value="${reservation?.attendees()}">
+                            </div>
+                            <div class="col-12 col-md-8">
+                                <label for="purpose" class="form-label">Propósito</label>
+                                <input type="text" class="form-control" id="purpose" name="purpose" maxlength="255" required
+                                       th:value="${reservation?.purpose()}" placeholder="Ej.: Clase de redes">
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Solicitar reserva</button>
+                            <a th:href="@{/reservations}" class="btn btn-outline-secondary">Volver</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+<script th:replace="~{layout :: scripts}"></script>
+</body>
+</html>

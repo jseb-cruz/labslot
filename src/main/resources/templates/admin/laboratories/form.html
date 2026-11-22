@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: head('Nuevo laboratorio')}"></head>
+<body class="bg-light d-flex flex-column min-vh-100">
+<nav th:replace="~{layout :: navbar}"></nav>
+
+<main class="container flex-grow-1">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <h1 class="h3 mb-3">Nuevo laboratorio</h1>
+
+            <div th:replace="~{layout :: alerts}"></div>
+
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <!-- Los valores se vuelven a llenar con lo que el usuario escribió si hay un error -->
+                    <form th:action="@{/admin/laboratories}" method="post">
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-md-4">
+                                <label for="code" class="form-label">Código</label>
+                                <input type="text" class="form-control" id="code" name="code" maxlength="20" required
+                                       th:value="${laboratory?.code()}" placeholder="Ej.: LAB-SIS-03">
+                            </div>
+                            <div class="col-12 col-md-8">
+                                <label for="name" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="name" name="name" maxlength="150" required
+                                       th:value="${laboratory?.name()}">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="building" class="form-label">Edificio</label>
+                            <input type="text" class="form-control" id="building" name="building" maxlength="150" required
+                                   th:value="${laboratory?.building()}" placeholder="Ej.: Sede Central - Bloque A">
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-12 col-md-4">
+                                <label for="capacity" class="form-label">Capacidad</label>
+                                <input type="number" class="form-control" id="capacity" name="capacity" min="1" required
+                                       th:value="${laboratory?.capacity()}">
+                            </div>
+                            <div class="col-12 col-md-8">
+                                <label for="state" class="form-label">Estado</label>
+                                <select class="form-select" id="state" name="state" required>
+                                    <option value="LSTATE_ACTIVE"
+                                            th:selected="${laboratory?.state()?.name() == 'LSTATE_ACTIVE'}">Activo</option>
+                                    <option value="LSTATE_MAINTENANCE"
+                                            th:selected="${laboratory?.state()?.name() == 'LSTATE_MAINTENANCE'}">En mantenimiento</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Guardar laboratorio</button>
+                            <a th:href="@{/admin/laboratories}" class="btn btn-outline-secondary">Volver</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{layout :: footer}"></footer>
+<script th:replace="~{layout :: scripts}"></script>
+</body>
+</html>
