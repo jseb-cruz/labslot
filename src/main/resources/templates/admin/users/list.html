@@ -26,8 +26,8 @@
                 </thead>
                 <tbody>
                 <tr th:each="user : ${users}">
-                    <td><strong th:text="${user.fullName()}">Jorge Andrés Castro Pinzón</strong></td>
-                    <td th:text="${user.email()}">jorge.castro@usantoto.edu.co</td>
+                    <td><strong th:text="${user.fullName()}">Administrador General</strong></td>
+                    <td th:text="${user.email()}">admin@usantoto.edu.co</td>
                     <td th:text="${user.role().name() == 'ROLE_ADMIN'} ? 'Administrador' : 'Usuario'">Usuario</td>
                     <td class="text-end">
                         <span th:if="${user.userId() == currentUser.userId()}" class="text-muted small">Tu usuario</span>

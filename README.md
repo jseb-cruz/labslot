@@ -34,9 +34,11 @@ Proyecto integrador de **Desarrollo Orientado a Servicios 2026-2**, Universidad 
    export DB_PASSWORD='TuContraseña'
    ./gradlew bootRun
    ```
-5. Abre <http://localhost:8080> y entra con uno de los [usuarios de prueba](#usuarios-de-prueba-y-roles).
+5. Abre <http://localhost:8080> y entra como administrador: `admin@usantoto.edu.co` / `Admin2026*`. Crea un laboratorio en **Laboratorios** y un usuario en **Usuarios**; con ese usuario ya se pueden hacer reservas ([usuarios y roles](#usuarios-y-roles)).
 
 **¿Sin MariaDB?** Salta los pasos de la base y arranca en modo memoria: `LABSLOT_REPOSITORY=inmemory ./gradlew bootRun`
+
+**¿Necesitas datos para una demostración?** Mira [datos de demostración](#datos-de-demostración).
 
 ## Funcionalidades
 
@@ -97,7 +99,8 @@ labslot/
 │   │   └── resources/
 │   │       ├── application.properties
 │   │       ├── schema.sql
-│   │       ├── data.sql
+│   │       ├── data.sql               administrador general (se carga solo)
+│   │       ├── demo-data.sql          datos de demostración (se carga a mano)
 │   │       ├── static/            Bootstrap (CSS y JavaScript)
 │   │       └── templates/         vistas Thymeleaf y páginas de error
 │   └── test/java/dev/team/labslot/core/
@@ -266,7 +269,7 @@ EXIT;
 
 Con `EXIT;` se sale de MariaDB y se vuelve a la terminal.
 
-Las tablas y los datos de prueba **se cargan solos** al arrancar la aplicación: `schema.sql` crea las tablas que falten y `data.sql` inserta 4 usuarios, 5 laboratorios y 14 reservas. Los arranques siguientes no borran ni duplican nada.
+Las tablas y el administrador general **se crean solos** al arrancar la aplicación: `schema.sql` crea las tablas que falten y `data.sql` inserta el administrador. Los laboratorios y las reservas empiezan vacíos. Los arranques siguientes no borran ni duplican nada.
 
 ### Configurar la contraseña
 
@@ -312,7 +315,7 @@ La propiedad `labslot.repository` elige dónde se guardan los datos:
 | Modo | Para qué sirve | Datos |
 |---|---|---|
 | `mariadb` (por defecto) | Uso normal: los datos se conservan al reiniciar | `schema.sql` y `data.sql` |
-| `inmemory` | Probar o mostrar el proyecto sin base de datos | Los mismos datos de ejemplo, cargados en cada arranque; todo se pierde al cerrar |
+| `inmemory` | Probar o mostrar el proyecto sin base de datos | Solo el administrador general, creado en cada arranque; todo se pierde al cerrar |
 
 Para usar el modo `inmemory` sin cambiar archivos:
 
@@ -332,29 +335,17 @@ Si algo falla con la base, la aplicación se detiene al arrancar. Busca estas l�
 | `Access denied for user 'labslot'@'localhost' (using password: NO)` | `DB_PASSWORD` no está definida | Definirla en la misma terminal o en la configuración de IntelliJ |
 | `Access denied for user 'labslot'@'localhost' (using password: YES)` | La contraseña es incorrecta o el usuario `labslot` no existe | Corregir `DB_PASSWORD` o revisar [la preparación de la base](#preparar-la-base-de-datos) |
 
-## Renovar los datos de prueba
+## Datos de demostración
 
-En modo `mariadb`, las fechas de las reservas de ejemplo se calculan **en la primera carga**, a partir de ese día, y después no se mueven. Con el tiempo, las reservas "futuras" quedan en el pasado. En modo `inmemory` no pasa, porque se calculan en cada arranque.
+`src/main/resources/demo-data.sql` tiene 4 usuarios, 5 laboratorios y 14 reservas en distintos estados. **No se carga solo** y sirve únicamente en modo `mariadb`.
 
-Para renovarlas, detén la aplicación, vacía los datos con una de estas opciones y vuelve a arrancarla.
-
-> **Advertencia:** no se puede deshacer. Se borra también lo que hayas creado tú en las tablas que vacíes.
-
-**Opción 1 (recomendada): vaciar solo las reservas.** Conserva los laboratorios y los usuarios, y borra todas las reservas, incluidas las tuyas.
+Arranca la aplicación al menos una vez, para que existan las tablas, y desde la carpeta del proyecto ejecuta:
 
 ```bash
-mariadb -h localhost -u labslot -p labslot -e "DELETE FROM reservations;"
+mariadb -h localhost -u labslot -p --default-character-set=utf8mb4 labslot < src/main/resources/demo-data.sql
 ```
 
-**Opción 2: vaciar las tres tablas.** Deja la base como recién instalada y borra todos los datos creados. El orden importa, porque las reservas dependen de las otras dos tablas.
-
-```bash
-mariadb -h localhost -u labslot -p labslot -e "DELETE FROM reservations; DELETE FROM laboratories; DELETE FROM users;"
-```
-
-Los dos comandos piden la contraseña del usuario `labslot`.
-
-## Usuarios de prueba y roles
+Pide la contraseña del usuario `labslot`. Cargarlo dos veces no duplica datos. Estos son sus usuarios:
 
 | Nombre | Correo | Contraseña | Rol |
 |---|---|---|---|
@@ -363,11 +354,35 @@ Los dos comandos piden la contraseña del usuario `labslot`.
 | Valentina Suárez Niño | `valentina.suarez@usantoto.edu.co` | `Usta2026*` | Usuario |
 | Daniel Felipe Rincón Ávila | `daniel.rincon@usantoto.edu.co` | `Usta2026*` | Usuario |
 
-Son datos de ejemplo. Las contraseñas no se guardan en texto plano, sino como hashes BCrypt.
+Las fechas de las reservas se calculan **el día en que se carga** y después no se mueven, así que conviene cargarlo el mismo día de la demostración. Para recalcularlas, vacía las reservas y vuelve a cargarlo:
 
-El administrador puede crear más usuarios y eliminar los que no tengan reservas desde la web, en **Usuarios** (<http://localhost:8080/admin/users>). La lista muestra nombre, correo y rol, nunca la contraseña. Si se elimina a un usuario con la sesión abierta, su siguiente petición lo lleva al inicio de sesión.
+```bash
+mariadb -h localhost -u labslot -p labslot -e "DELETE FROM reservations;"
+```
 
-En modo `mariadb`, un usuario de ejemplo eliminado **vuelve a aparecer** al reiniciar, con la contraseña de la tabla, porque `data.sql` lo inserta de nuevo.
+Para volver a empezar solo con el administrador general, detén la aplicación, vacía las tres tablas y arráncala de nuevo:
+
+```bash
+mariadb -h localhost -u labslot -p labslot -e "DELETE FROM reservations; DELETE FROM laboratories; DELETE FROM users;"
+```
+
+> **Advertencia:** estos dos comandos no se pueden deshacer y borran también los datos que hayas creado tú en esas tablas.
+
+## Usuarios y roles
+
+La aplicación empieza con un solo usuario:
+
+| Nombre | Correo | Contraseña | Rol |
+|---|---|---|---|
+| Administrador General | `admin@usantoto.edu.co` | `Admin2026*` | Administrador |
+
+Los demás usuarios los crea el administrador desde la web, en **Usuarios** (<http://localhost:8080/admin/users>), donde también puede eliminar los que no tengan reservas. La lista muestra nombre, correo y rol, nunca la contraseña. Si se elimina a un usuario con la sesión abierta, su siguiente petición lo lleva al inicio de sesión. Las contraseñas no se guardan en texto plano, sino como hashes BCrypt.
+
+> **Importante:** la contraseña del administrador general es conocida, porque está publicada aquí. En un uso real hay que reemplazarlo. La aplicación no tiene una pantalla para cambiar contraseñas, así que, en modo `mariadb`, se hace de esta forma:
+>
+> 1. Entra con el administrador general y crea en **Usuarios** otro administrador, con una contraseña propia.
+> 2. Entra con el nuevo administrador y elimina al administrador general.
+> 3. Cambia `spring.sql.init.mode` de `always` a `never` en `application.properties` (la primera de las dos líneas). Si no, `data.sql` vuelve a crear al administrador general en el siguiente arranque.
 
 | Acción | Usuario | Administrador |
 |---|---|---|
@@ -419,13 +434,27 @@ Todos los errores tienen la misma forma, con el mensaje en español:
 
 ### Ejemplos con curl
 
-Variables que usan los ejemplos (la fecha debe ser futura):
+Primero crea un usuario con rol Usuario desde la web, en **Usuarios** (<http://localhost:8080/admin/users>), y pon su correo y su contraseña en `USUARIO`. La fecha debe ser futura.
 
 ```bash
 API=http://localhost:7070/api
-USUARIO='jorge.castro@usantoto.edu.co:Usta2026*'
-ADMIN='martha.vargas@usantoto.edu.co:Admin2026*'
+USUARIO='correo-del-usuario:su-contraseña'
+ADMIN='admin@usantoto.edu.co:Admin2026*'
 FECHA=$(date -d '+20 days' +%F)
+```
+
+Crear un laboratorio (al principio no hay ninguno):
+
+```bash
+curl -u "$ADMIN" -H 'Content-Type: application/json' \
+  -d '{"code":"LAB-BIO-01","name":"Laboratorio de Biología","building":"Sede Central - Bloque C","capacity":20,"state":"LSTATE_ACTIVE"}' \
+  "$API/laboratories"
+```
+
+Copia el `laboratoryId` de la respuesta. En modo `inmemory` los datos se pierden al cerrar, así que cambia en cada arranque.
+
+```bash
+LAB_ID=pega-aqui-el-laboratoryId
 ```
 
 Listar los laboratorios:
@@ -434,24 +463,10 @@ Listar los laboratorios:
 curl -u "$USUARIO" "$API/laboratories"
 ```
 
-Copia de la respuesta el `laboratoryId` de un laboratorio activo, por ejemplo `LAB-SIS-01`. En modo `inmemory` los ids cambian en cada arranque.
-
-```bash
-LAB_ID=pega-aqui-el-laboratoryId
-```
-
 Ver un laboratorio:
 
 ```bash
 curl -u "$USUARIO" "$API/laboratories/$LAB_ID"
-```
-
-Crear un laboratorio:
-
-```bash
-curl -u "$ADMIN" -H 'Content-Type: application/json' \
-  -d '{"code":"LAB-BIO-01","name":"Laboratorio de Biología","building":"Sede Central - Bloque C","capacity":20,"state":"LSTATE_ACTIVE"}' \
-  "$API/laboratories"
 ```
 
 Cambiar un laboratorio entre activo y mantenimiento. Repite el comando para dejarlo como estaba:
